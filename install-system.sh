@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install (or update) the yami login screen: greetd starts yami-greet inside niri, from the next
 # boot. Run from the repo as yourself; it builds yami-greet and asks for sudo once.
-#   install-system.sh [--no-enable]   --no-enable: install, leave the login manager alone
+#   install-system.sh [--no-enable] [--yes]   --no-enable: install, leave the login manager alone; --yes: do not ask
 # The installer runs the root half itself (as root):
 #   greet-install.sh --system USER [--bin FILE] [--cursor DIR] [--no-enable] [--bin-only]
 #   greet-install.sh --uninit        greetd off, the login manager it replaced on (OpenRC, runit)
@@ -210,9 +210,19 @@ if [[ ${1:-} == --uninit ]]; then
   exit 0
 fi
 
-ENABLE=()
-for a; do case "$a" in --no-enable) ENABLE=(--no-enable) ;; *) echo "unknown: $a" >&2; exit 2 ;; esac; done
+ENABLE=() YES=0
+for a; do case "$a" in --no-enable) ENABLE=(--no-enable) ;; -y | --yes) YES=1 ;; *) echo "unknown: $a" >&2; exit 2 ;; esac; done
 ((EUID != 0)) || { echo "run it as yourself: it asks for the password itself" >&2; exit 1; }
+# человек у терминала решает сам; установщик и шелл спросили до запуска и передают --yes
+if ((!YES)) && [[ -t 0 && -t 1 ]]; then
+  case "${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}" in
+    ru*) q="Поставить экран входа yami-greet? Он заменит текущий менеджер входа со следующей загрузки, нужен sudo." ;;
+    pt*) q="Instalar a tela de login yami-greet? Ela substitui o gerenciador de login atual a partir da próxima inicialização; precisa de sudo." ;;
+    *) q="Install the yami-greet login screen? It replaces the current login manager from the next boot and needs sudo." ;;
+  esac
+  read -r -p "$q [y/N] " a || a=n
+  [[ $a =~ ^[yYдДsS] ]] || { echo "cancelled"; exit 1; }
+fi
 SU=sudo
 command -v sudo >/dev/null || SU=doas
 if ! command -v greetd >/dev/null; then
