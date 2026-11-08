@@ -184,7 +184,7 @@ pub fn run(g: G, fonts: Fonts, t0: Instant) -> i32 {
         app.tick();
         TimeoutAction::ToDuration(Duration::from_millis(530))
     });
-    // ни одного монитора за 2 с: niri экрана входа погасил все (yami-outputs.kdl выключает тот,
+    // ни одного монитора за 2 с: niri экрана входа погасил все (outputs.kdl шелла выключает тот,
     // что сейчас не подключён, а подключённый — off). Включить подключённый, иначе войти некуда
     if !app.g.demo {
         let _ = handle.insert_source(Timer::from_duration(Duration::from_secs(2)), |_, _, app: &mut App| {

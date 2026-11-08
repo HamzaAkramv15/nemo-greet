@@ -1,6 +1,6 @@
 // Конфиг niri для экрана входа (`yami-greet kdl`, его пишет greet-session при каждом старте).
 // Свой файл niri вида не читает: из look.json берутся только мониторы (то, что написал шелл в
-// yami-outputs.kdl) и раскладки, и каждое значение проверяется по белому списку символов.
+// ~/.config/yami/niri/outputs.kdl) и раскладки, и каждое значение проверяется по белому списку символов.
 // Иначе файл пользователя мог бы дать niri экрана входа spawn или бинд — а он видит пароли всех.
 // --plain: без мониторов, раскладок и ключей новых niri (если полный конфиг не прошёл проверку).
 
@@ -12,7 +12,7 @@ fn ok_chars(s: &str, extra: &str, max: usize) -> bool {
 
 const TRANSFORMS: [&str; 8] = ["normal", "90", "180", "270", "flipped", "flipped-90", "flipped-180", "flipped-270"];
 
-/// блоки output из yami-outputs.kdl шелла: имя, off, mode, scale, transform, position
+/// блоки output из outputs.kdl шелла: имя, off, mode, scale, transform, position
 pub fn outputs(text: &str) -> String {
     let mut out = String::new();
     let mut open = false;

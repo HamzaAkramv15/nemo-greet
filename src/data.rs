@@ -194,7 +194,7 @@ pub fn remember(user: &str, session: &str) {
     }
 }
 
-/// вид, выложенный шеллом: настройки в формате yami-shell.json. Файл пишет пользователь: читается
+/// вид, выложенный шеллом: настройки в формате ~/.config/yami/shell.json. Файл пишет пользователь: читается
 /// только обычный файл (не ссылка) и не больше мегабайта (fifo или /dev/zero под этим именем не подвесят вход)
 pub fn look_json() -> serde_json::Value {
     yami_px::paths::read_capped_nofollow(&look_dir().join("look.json"), 1 << 20).and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(serde_json::Value::Null)
