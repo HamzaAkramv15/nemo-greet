@@ -232,9 +232,8 @@ TARGET="${TARGET:-$ROOT/target}"
 (cd "$ROOT" && cargo build --release --locked --target-dir "$TARGET")
 TMP="$(mktemp -d)"
 trap 'rm -rf -- "$TMP"' EXIT
-# курсор экрана входа: его рисует шелл yami (theme.py); без шелла — системный
-THEME_PY="${XDG_STATE_HOME:-$HOME/.local/state}/yami/theme.py"
-[[ -f $THEME_PY ]] && python3 -I "$THEME_PY" --cursor-to "$TMP/yami-cursor"
+# курсор экрана входа: его рисует шелл yami; без шелла — системный
+if command -v yami-shell >/dev/null; then yami-shell recolor --cursor-to "$TMP/yami-cursor" || true; fi
 # the login manager greetd replaces (systemd): ./install.sh --uninstall enables it again; on OpenRC
 # and runit the root half writes them down itself (/var/lib/yami-greet/replaced)
 STATE_D="${XDG_STATE_HOME:-$HOME/.local/state}/yami"
