@@ -239,7 +239,12 @@ fi
 TARGET="${CARGO_TARGET_DIR:-}"
 [[ -z $TARGET && $ROOT == "${XDG_DATA_HOME:-$HOME/.local/share}/yami/src" ]] && TARGET="${XDG_CACHE_HOME:-$HOME/.cache}/yami/target"
 TARGET="${TARGET:-$ROOT/target}"
-(cd "$ROOT" && cargo build --release --locked --target-dir "$TARGET")
+# готовый бинарь лежит рядом (установка из архива выпуска): собирать нечего
+GREET="$ROOT/yami-greet"
+if [[ ! -x $GREET ]]; then
+  (cd "$ROOT" && cargo build --release --locked --target-dir "$TARGET")
+  GREET="$TARGET/release/yami-greet"
+fi
 TMP="$(mktemp -d)"
 trap 'rm -rf -- "$TMP"' EXIT
 # курсор экрана входа: его рисует шелл yami; без шелла — системный
@@ -251,7 +256,7 @@ prev="$(basename "$(readlink /etc/systemd/system/display-manager.service 2>/dev/
 if [[ -n $prev && $prev != greetd && ! -s $STATE_D/login-dm ]]; then
   mkdir -p "$STATE_D" && printf '%s\n' "$prev" >"$STATE_D/login-dm"
 fi
-$SU "$ROOT/install-system.sh" --system "$(id -un)" --bin "$TARGET/release/yami-greet" --cursor "$TMP/yami-cursor" "${ENABLE[@]}"
+$SU "$ROOT/install-system.sh" --system "$(id -un)" --bin "$GREET" --cursor "$TMP/yami-cursor" "${ENABLE[@]}"
 # the look of the shell, now (it keeps it current itself)
 yami-shell login sync >/dev/null 2>&1 || true
 echo "login screen: yami-greet in greetd ($(/usr/local/bin/yami-greet --version))"
