@@ -3,8 +3,8 @@
 # boot. Run from the repo as yourself; it builds yami-greet and asks for sudo once.
 #   install-system.sh [--no-enable] [--yes]   --no-enable: install, leave the login manager alone; --yes: do not ask
 # The installer runs the root half itself (as root):
-#   greet-install.sh --system USER [--bin FILE] [--cursor DIR] [--no-enable] [--bin-only]
-#   greet-install.sh --uninit        greetd off, the login manager it replaced on (OpenRC, runit)
+#   install-system.sh --system USER [--bin FILE] [--cursor DIR] [--no-enable] [--bin-only]
+#   install-system.sh --uninit        greetd off, the login manager it replaced on (OpenRC, runit)
 # Init systems: systemd (display-manager.service), OpenRC (Alpine, Gentoo), runit (Void). Without
 # logind/elogind the greeter user joins seatd's group, so niri gets a seat.
 set -euo pipefail
@@ -147,7 +147,7 @@ system() {
     esac
     shift
   done
-  ((EUID == 0)) || { echo "greet-install.sh --system runs as root" >&2; exit 1; }
+  ((EUID == 0)) || { echo "install-system.sh --system runs as root" >&2; exit 1; }
   [[ $user =~ ^[a-z_][a-z0-9_.-]*\$?$ ]] && getent passwd "$user" >/dev/null || { echo "no such user: $user" >&2; exit 1; }
   if [[ -n $bin ]]; then
     install -Dm755 "$bin" /usr/local/bin/.yami-greet.new && mv -f /usr/local/bin/.yami-greet.new /usr/local/bin/yami-greet
@@ -205,7 +205,7 @@ if [[ ${1:-} == --system ]]; then
   exit 0
 fi
 if [[ ${1:-} == --uninit ]]; then
-  ((EUID == 0)) || { echo "greet-install.sh --uninit runs as root" >&2; exit 1; }
+  ((EUID == 0)) || { echo "install-system.sh --uninit runs as root: sudo ./install-system.sh --uninit" >&2; exit 1; }
   uninit
   exit 0
 fi
