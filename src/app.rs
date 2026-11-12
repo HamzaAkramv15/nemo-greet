@@ -491,7 +491,8 @@ impl App {
                 g.status.clear();
                 g.phase = g.first_phase();
             }
-            Act::Session if !busy && !g.sessions.is_empty() => {
+            // только до отправки: сеанс ушёл greetd вместе с паролем (Ask::Login), и запомнить надо его
+            Act::Session if matches!(g.phase, Phase::Pass | Phase::Name) && !g.sessions.is_empty() => {
                 let n = g.sessions.len();
                 g.session = if back { (g.session + n - 1) % n } else { (g.session + 1) % n };
             }

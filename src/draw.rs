@@ -173,7 +173,8 @@ pub fn draw(ui: &mut Ui, g: &G, w: i32, h: i32, main: bool) {
         if !g.sessions.is_empty() {
             let name = g.sessions.get(g.session).map(|s| s.name.clone()).unwrap_or_default();
             let bw = ui.w(PX, &name) + 44;
-            ui.button(R::new(x, by, bw, 32), &name, "grid", Tone::Plain, false, g.phase != Phase::Busy, Act::Session);
+            // сеанс уходит greetd с паролем: пока идёт вход (и второй вопрос PAM), его уже не сменить
+            ui.button(R::new(x, by, bw, 32), &name, "grid", Tone::Plain, false, matches!(g.phase, Phase::Pass | Phase::Name), Act::Session);
             x += bw + 8;
         }
         if g.layouts.len() > 1 {
