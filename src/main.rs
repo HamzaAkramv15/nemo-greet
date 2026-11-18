@@ -183,7 +183,7 @@ fn shot(args: &[String]) -> i32 {
     let wall = data::wall();
     let mut fonts = fonts(&Look::from_json(&v, None));
     let mut ic = yami_px::icons::Icons::new("");
-    for target in ["pass", "busy", "wrong", "prompt", "name", "other", "second", "minimal", "demo"] {
+    for target in ["pass", "busy", "wrong", "caps", "prompt", "name", "other", "second", "minimal", "demo"] {
         let mut g = state(&v, target == "demo");
         g.opts.list = true;
         g.set_wall(if target == "minimal" { None } else { wall.clone() });
@@ -199,6 +199,11 @@ fn shot(args: &[String]) -> i32 {
             "pass" => g.field.set("xxxxxx"),
             "busy" => g.phase = Phase::Busy,
             "wrong" => g.fails = 2,
+            "caps" => {
+                g.field.set("xxxxxx");
+                g.fails = 1;
+                g.caps = true;
+            }
             "prompt" => {
                 g.phase = Phase::Prompt { hidden: false };
                 g.prompt = "Verification code:".into();

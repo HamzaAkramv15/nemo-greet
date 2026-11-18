@@ -241,13 +241,21 @@ fn draw_login(ui: &mut Ui, g: &G, w: i32, dy: i32) {
     };
     let focused = g.phase != Phase::Busy && g.phase != Phase::Done;
     ui.field(fr, &g.field, &hint, focused, masked, Act::Field);
+    // caps lock — значок в поле, всегда, пока включён: при неверном пароле он нужнее всего
+    if g.caps {
+        let label = "CAPS";
+        let bw = ui.w(font::PX, label) + 12;
+        let b = R::new(fr.right() - bw - 6, fr.y + (fr.h - 18) / 2, bw, 18);
+        ui.cv.fill(b, t.warn.alpha(0.22));
+        ui.cv.fill(R::new(b.x, b.y, b.w, 1), t.warn);
+        ui.cv.fill(R::new(b.x, b.bottom() - 1, b.w, 1), t.warn);
+        ui.text_center(font::PX, b, label, t.warn);
+    }
     // состояние: проверка, ошибка, caps lock, подсказка
     let (status, sc) = if !g.status.is_empty() {
         (g.status.clone(), if g.bad || g.fails > 0 { t.ember } else { t.text_dim })
     } else if g.phase == Phase::Busy {
         ("проверяю…".to_string(), t.text_dim)
-    } else if g.caps {
-        ("caps lock".to_string(), t.warn)
     } else if g.fails > 0 {
         (crate::tf!("неверно ×{}", "wrong ×{}", "incorreta ×{}", g.fails), t.ember)
     } else if g.demo {
