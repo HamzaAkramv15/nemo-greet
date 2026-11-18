@@ -57,6 +57,8 @@ fn fonts(look: &Look) -> Fonts {
 fn state(v: &serde_json::Value, demo: bool) -> G {
     let look = Look::from_json(v, None);
     i18n::set(&look.lang);
+    // формат часов (шелл решает сам: как на столе или свой): AM/PM, если clock12
+    yami_px::time::set_hour12(v.get("clock12").and_then(|x| x.as_bool()).unwrap_or(false));
     let opts = data::Opts::from(v);
     // «имя вводят сами»: список пользователей не читается и не показывается
     let users = if opts.list { data::users() } else { vec![] };

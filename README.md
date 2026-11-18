@@ -1,3 +1,5 @@
+> **Nemo fork.** This is `nemo-greet`, Nemo's fork of [yami-greet](https://github.com/Trendorin/yami-greet) by Trendorin (MIT, thank you). It draws with Nemo's fork of yami-px (the Nemo fish, 12-hour clock) and follows the desktop's night light. Everything below is the original README.
+
 # yami-greet
 
 English · [Русский](README.ru.md)

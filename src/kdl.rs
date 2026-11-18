@@ -75,6 +75,22 @@ pub fn outputs(text: &str) -> String {
     out
 }
 
+/// ночной свет и на экране входа: если шелл его включил (nightOn), niri экрана входа запускает
+/// wlsunset с теми же аргументами, что у шелла (yami_px::night::args). Значения — чужие: числа
+/// зажаты в пределы там же, а в команду попадают только цифры, точки и минусы
+pub fn night(look: &Value) -> String {
+    let on = look.get("nightOn").and_then(|v| v.as_bool()).unwrap_or(false);
+    let bin = ["/usr/bin/wlsunset", "/usr/local/bin/wlsunset"].into_iter().find(|p| std::path::Path::new(p).is_file());
+    let Some(bin) = bin.filter(|_| on) else { return String::new() };
+    let int = |k: &str, d: i64| look.get(k).and_then(|v| v.as_i64()).unwrap_or(d).clamp(-1000, 100_000) as i32;
+    let num = |k: &str| look.get(k).and_then(|v| v.as_f64()).filter(|x| x.is_finite());
+    let place = num("nightLat").zip(num("nightLon"));
+    let always = look.get("nightAlways").and_then(|v| v.as_bool()).unwrap_or(false);
+    let args = yami_px::night::args(int("nightTemp", 4000), always, place, int("nightOnH", 20), int("nightOffH", 7));
+    let list: Vec<String> = std::iter::once(bin.to_string()).chain(args).map(|a| q(&a)).collect();
+    format!("\nspawn-at-startup {}\n", list.join(" "))
+}
+
 fn q(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
@@ -108,6 +124,7 @@ pub fn config(look: &Value, plain: bool, me: &str) -> String {
     c += "    }\n    touchpad {\n        tap\n    }\n}\n";
     if !plain {
         c += &outputs(&s("outputs"));
+        c += &night(look);
     }
     // экран входа вышел (вошли, упал, выключают) — niri следом; код выхода — greet-session (в свою
     // папку XDG_RUNTIME_DIR, её создаёт greet-session; без неё — никуда, не в общий /tmp). niri
@@ -122,6 +139,27 @@ pub fn config(look: &Value, plain: bool, me: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
+    /// ночной свет: выключен — ничего; включён — wlsunset с зажатыми значениями; мусор в команду не попадает
+    #[test]
+    fn night_light_is_started_only_when_asked_and_clamped() {
+        if !std::path::Path::new("/usr/bin/wlsunset").is_file() && !std::path::Path::new("/usr/local/bin/wlsunset").is_file() {
+            return;
+        }
+        assert_eq!(super::night(&json!({})), "");
+        assert_eq!(super::night(&json!({ "nightOn": false, "nightTemp": 4000 })), "");
+        let on = super::night(&json!({ "nightOn": true, "nightTemp": 4750, "nightOnH": 20, "nightOffH": 23 }));
+        assert!(on.contains("spawn-at-startup") && on.contains("\"-t\" \"4750\"") && on.contains("\"-S\" \"23:00\"") && on.contains("\"-s\" \"20:00\""), "{on}");
+        let sun = super::night(&json!({ "nightOn": true, "nightTemp": 4000, "nightLat": 30.06, "nightLon": 31.25 }));
+        assert!(sun.contains("\"-l\" \"30.06\"") && sun.contains("\"-L\" \"31.25\""), "{sun}");
+        let all = super::night(&json!({ "nightOn": true, "nightTemp": 3500, "nightAlways": true }));
+        assert!(all.contains("\"-t\" \"3500\" \"-T\" \"3501\""), "{all}");
+        // чужие значения: за пределы не выходят, строки вместо чисел — по умолчанию
+        let evil = super::night(&json!({ "nightOn": true, "nightTemp": 999999, "nightLat": "1; rm -rf /", "nightOnH": "x" }));
+        assert!(evil.contains("\"-t\" \"6000\"") && !evil.contains("rm") && !evil.contains("-l"), "{evil}");
+    }
+
     #[test]
     fn outputs_whitelist() {
         let t = "// yami\n\noutput \"DP-2\" {\n    mode \"1920x1080@180.000\"\n    scale 1\n    transform \"normal\"\n    position x=0 y=0\n    variable-refresh-rate on-demand=true\n}\n\noutput \"HDMI-A-1\" {\n    off\n}\nspawn-at-startup \"evil\"\noutput \"x\\\" { spawn\" {\n    mode \"1x1@60;rm\"\n}\n";
