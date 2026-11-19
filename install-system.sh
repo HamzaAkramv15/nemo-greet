@@ -182,7 +182,10 @@ system() {
   seat_setup "$g"
   # greetd's own config is kept once (./install.sh --uninstall puts it back); its terminal stays
   mkdir -p /etc/greetd
-  if [[ -f $CONF ]] && ! head -n1 "$CONF" | grep -q '^# nemo:' && [[ ! -e $CONF.nemo-orig ]]; then
+  # before the rename the login screen was called yami: its backup of the system's own config moves to the new name,
+  # and a config that says «# yami:» is ours, not the system's
+  [[ -e $CONF.yami-orig && ! -e $CONF.nemo-orig ]] && mv -f "$CONF.yami-orig" "$CONF.nemo-orig"
+  if [[ -f $CONF ]] && ! head -n1 "$CONF" | grep -q '^# \(nemo\|yami\):' && [[ ! -e $CONF.nemo-orig ]]; then
     cp -p "$CONF" "$CONF.nemo-orig"
   fi
   local vt
