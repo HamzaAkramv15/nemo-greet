@@ -682,6 +682,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2df906b07856748fa3f6e0ad0cbaa047052d4a7dd609e231c4f72cee8c36f31"
 
 [[package]]
+name = "unicode-bidi"
+version = "0.3.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c1cb5db39152898a79168971543b1cb5020dff7fe43c8dc468b0885f5e29df5"
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -891,8 +897,8 @@ dependencies = [
 
 [[package]]
 name = "yami-px"
-version = "3.1.0"
-source = "git+https://github.com/HamzaAkramv15/nemo?tag=px-v3.1.0#ed1e40f1d1a5bbf60ffbfd683d9ed1ac943dfd11"
+version = "3.2.0"
+source = "git+https://github.com/HamzaAkramv15/nemo?tag=px-v3.2.0#c8021fcb420d0c5d2be28c00becf152b6fe850fe"
 dependencies = [
  "ab_glyph",
  "image",
@@ -900,6 +906,7 @@ dependencies = [
  "resvg",
  "serde",
  "serde_json",
+ "unicode-bidi",
 ]
 
 [[package]]
