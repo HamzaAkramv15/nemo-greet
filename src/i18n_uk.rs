@@ -22,7 +22,7 @@ const UK: &[(&str, &str)] = &[
     ("Wednesday", "Середа"),
     ("another user", "інший користувач"),
     ("checking…", "перевіряю…"),
-    ("demo: the password is yami, esc to leave", "демо: пароль — yami, esc — вийти"),
+    ("demo: the password is nemo, esc to leave", "демо: пароль — nemo, esc — вийти"),
     ("enter — log in", "enter — увійти"),
     ("going to sleep…", "присипляю…"),
     ("no Wayland sessions", "немає сесій Wayland"),

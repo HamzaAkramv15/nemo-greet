@@ -143,7 +143,7 @@ pub fn spawn(rx: Receiver<Ask>, tx: impl Fn(Ev) + Send + 'static) {
                 return;
             }
             if let Some(p) = pass.as_mut() {
-                yami_px::ui::wipe(p);
+                nemo_px::ui::wipe(p);
             }
         }
     });
@@ -180,7 +180,7 @@ fn login(c: &mut Conn, rx: &Receiver<Ask>, tx: &impl Fn(Ev), user: &str, pass: &
                     "secret" if pass.is_some() => {
                         let mut p = pass.take().unwrap_or_default();
                         let r = c.answer(Some(&p));
-                        yami_px::ui::wipe(&mut p);
+                        nemo_px::ui::wipe(&mut p);
                         r?;
                     }
                     t @ ("secret" | "visible") => {
@@ -189,7 +189,7 @@ fn login(c: &mut Conn, rx: &Receiver<Ask>, tx: &impl Fn(Ev), user: &str, pass: &
                             Ok(Ask::Answer(mut a)) => {
                                 let r = c.answer(a.as_deref());
                                 if let Some(a) = a.as_mut() {
-                                    yami_px::ui::wipe(a);
+                                    nemo_px::ui::wipe(a);
                                 }
                                 r?;
                             }
@@ -214,14 +214,14 @@ fn login(c: &mut Conn, rx: &Receiver<Ask>, tx: &impl Fn(Ev), user: &str, pass: &
     }
 }
 
-/// демо без greetd: пароль «yami» впускает, второй вопрос не задаётся
+/// демо без greetd: пароль «nemo» впускает, второй вопрос не задаётся
 pub fn spawn_demo(rx: Receiver<Ask>, tx: impl Fn(Ev) + Send + 'static) {
     std::thread::spawn(move || {
         while let Ok(a) = rx.recv() {
             let Ask::Login { pass, .. } = a else { continue };
             std::thread::sleep(std::time::Duration::from_millis(400));
             match pass.as_deref() {
-                Some("yami") => tx(Ev::Started),
+                Some("nemo") => tx(Ev::Started),
                 None => tx(Ev::Prompt { hidden: true, text: "Password:".into() }),
                 _ => tx(Ev::Failed),
             }
@@ -250,7 +250,7 @@ mod tests {
     /// greetd понарошку: неверный пароль, потом верный со вторым фактором и запуском сеанса
     #[test]
     fn flow() {
-        let dir = std::env::temp_dir().join(format!("yami-greet-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("nemo-greet-test-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
         let sock = dir.join("g.sock");
         let l = UnixListener::bind(&sock).unwrap();
@@ -261,7 +261,7 @@ mod tests {
             // 1: неверный пароль
             let r = read(&mut s);
             assert_eq!(r["type"], "create_session");
-            assert_eq!(r["username"], "yami \"q\"");
+            assert_eq!(r["username"], "nemo \"q\"");
             reply(&mut s, r#"{"type":"auth_message","auth_message_type":"secret","auth_message":"Password: "}"#);
             seen.push(read(&mut s)["response"].as_str().unwrap().to_string());
             reply(&mut s, r#"{"type":"error","error_type":"auth_error","description":"nope"}"#);
@@ -288,7 +288,7 @@ mod tests {
         spawn(arx, move |e| {
             let _ = etx.send(e);
         });
-        let login = |p: &str| Ask::Login { user: "yami \"q\"".into(), pass: Some(p.into()), cmd: vec!["niri-session".into()], env: vec!["XDG_SESSION_TYPE=wayland".into()] };
+        let login = |p: &str| Ask::Login { user: "nemo \"q\"".into(), pass: Some(p.into()), cmd: vec!["niri-session".into()], env: vec!["XDG_SESSION_TYPE=wayland".into()] };
         atx.send(login("wr\"ong")).unwrap();
         assert!(matches!(erx.recv().unwrap(), Ev::Failed));
         atx.send(login("right")).unwrap();

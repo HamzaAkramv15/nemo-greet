@@ -1,5 +1,5 @@
 [package]
-name = "yami-greet"
+name = "nemo-greet"
 version = "3.1.0"
 edition = "2021"
 description = "Login screen: a greetd greeter inside niri"
@@ -7,12 +7,12 @@ license = "MIT"
 publish = false
 
 [[bin]]
-name = "yami-greet"
+name = "nemo-greet"
 path = "src/main.rs"
 
 [dependencies]
-# the drawing library: Nemo's fork of yami (12-hour clock, the Nemo fish, shared night-light arguments)
-yami-px = { git = "https://github.com/HamzaAkramv15/nemo", tag = "px-v3.2.0" }
+# the drawing library: Nemo's fork of nemo (12-hour clock, the Nemo fish, shared night-light arguments)
+nemo-px = { git = "https://github.com/HamzaAkramv15/nemo", tag = "px-v3.2.1" }
 smithay-client-toolkit = "0.20"
 wayland-client = "0.31"
 wayland-protocols = { version = "0.32", features = ["client", "staging"] }

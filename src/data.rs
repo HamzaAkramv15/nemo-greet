@@ -4,23 +4,23 @@
 // экран входа). Файлы вида пишет пользователь: здесь они только данные, всё проверяется.
 
 use std::path::{Path, PathBuf};
-use yami_px::gfx::Img;
+use nemo_px::gfx::Img;
 
 /// папка вида: её отдаёт пользователю установщик, шелл пишет сюда при каждой смене вида.
-/// YAMI_GREET_LOOK — для проверок (окружение экрана входа задают greetd и наш конфиг niri)
+/// NEMO_GREET_LOOK — для проверок (окружение экрана входа задают greetd и наш конфиг niri)
 pub fn look_dir() -> PathBuf {
-    std::env::var_os("YAMI_GREET_LOOK").map(PathBuf::from).unwrap_or_else(|| "/var/lib/yami-greet/look".into())
+    std::env::var_os("NEMO_GREET_LOOK").map(PathBuf::from).unwrap_or_else(|| "/var/lib/nemo-greet/look".into())
 }
 /// память экрана входа (последний пользователь и сеанс): папка пользователя greetd
-pub const STATE: &str = "/var/lib/yami-greet/state";
-/// шрифты экрана входа (Tiny5, DotGothic16): YAMI_GREET_FONTS, рядом с бинарником (пакет: bin/ и
-/// share/yami-greet/fonts), иначе куда кладёт установщик
+pub const STATE: &str = "/var/lib/nemo-greet/state";
+/// шрифты экрана входа (Tiny5, DotGothic16): NEMO_GREET_FONTS, рядом с бинарником (пакет: bin/ и
+/// share/nemo-greet/fonts), иначе куда кладёт установщик
 pub fn fonts_dir() -> PathBuf {
-    if let Some(d) = std::env::var_os("YAMI_GREET_FONTS").filter(|d| !d.is_empty()) {
+    if let Some(d) = std::env::var_os("NEMO_GREET_FONTS").filter(|d| !d.is_empty()) {
         return d.into();
     }
-    let near = yami_px::paths::self_exe().parent().map(|b| b.join("../share/yami-greet/fonts"));
-    near.filter(|d| d.is_dir()).unwrap_or_else(|| "/usr/local/share/yami-greet/fonts".into())
+    let near = nemo_px::paths::self_exe().parent().map(|b| b.join("../share/nemo-greet/fonts"));
+    near.filter(|d| d.is_dir()).unwrap_or_else(|| "/usr/local/share/nemo-greet/fonts".into())
 }
 
 #[derive(Clone, Debug)]
@@ -190,14 +190,14 @@ pub fn last() -> (String, String) {
 pub fn remember(user: &str, session: &str) {
     let d = Path::new(STATE);
     if d.is_dir() {
-        let _ = yami_px::paths::write_atomic(&d.join("last"), &format!("{user}\n{session}\n"));
+        let _ = nemo_px::paths::write_atomic(&d.join("last"), &format!("{user}\n{session}\n"));
     }
 }
 
-/// вид, выложенный шеллом: настройки в формате ~/.config/yami/shell.json. Файл пишет пользователь: читается
+/// вид, выложенный шеллом: настройки в формате ~/.config/nemo/shell.json. Файл пишет пользователь: читается
 /// только обычный файл (не ссылка) и не больше мегабайта (fifo или /dev/zero под этим именем не подвесят вход)
 pub fn look_json() -> serde_json::Value {
-    yami_px::paths::read_capped_nofollow(&look_dir().join("look.json"), 1 << 20).and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(serde_json::Value::Null)
+    nemo_px::paths::read_capped_nofollow(&look_dir().join("look.json"), 1 << 20).and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(serde_json::Value::Null)
 }
 
 /// что настроено для экрана входа (вкладка шелла «экран входа», ключи greet* в look.json)
@@ -233,7 +233,7 @@ impl Opts {
 /// обои: картинка шелла, уже обрезанная и в тонах палитры (размер первого монитора). Читается с
 /// потолками: файл ≤ 48 МБ, сторона ≤ 8K, память декодера ≤ 160 МБ; RGB сразу в пиксели холста
 pub fn wall() -> Option<Img> {
-    let bytes = yami_px::paths::read_capped_nofollow(&look_dir().join("wall.png"), 48 << 20)?;
+    let bytes = nemo_px::paths::read_capped_nofollow(&look_dir().join("wall.png"), 48 << 20)?;
     let mut r = image::ImageReader::with_format(std::io::Cursor::new(&bytes), image::ImageFormat::Png);
     let mut lim = image::Limits::default();
     lim.max_image_width = Some(8192);
@@ -247,13 +247,13 @@ pub fn wall() -> Option<Img> {
         image::DynamicImage::ImageRgb8(i) => i.pixels().map(|p| 0xff00_0000 | (p.0[0] as u32) << 16 | (p.0[1] as u32) << 8 | p.0[2] as u32).collect(),
         other => {
             let i = other.to_rgba8();
-            let out = yami_px::icons::from_rgba(&i);
+            let out = nemo_px::icons::from_rgba(&i);
             drop(i);
-            yami_px::trim_heap();
+            nemo_px::trim_heap();
             return Some(out);
         }
     };
-    yami_px::trim_heap();
+    nemo_px::trim_heap();
     Some(Img { w, h, px })
 }
 
@@ -263,14 +263,14 @@ pub fn power_ok() -> bool {
     Path::new("/run/systemd/seats").is_dir() && runnable("loginctl")
 }
 
-/// как идёт запуск — для greet-session ($XDG_RUNTIME_DIR/yami-greet.status, папка своя): «up N» —
+/// как идёт запуск — для greet-session ($XDG_RUNTIME_DIR/nemo-greet.status, папка своя): «up N» —
 /// первый кадр на экране через N мс после старта, «session N» — greetd запускает сеанс. Пишется
 /// до выхода, поэтому быстрый вход никогда не сочтётся сбоем
 pub fn status(what: &str, ms: u128) {
     use std::io::Write;
     use std::os::unix::fs::OpenOptionsExt;
     let Some(d) = std::env::var_os("XDG_RUNTIME_DIR").filter(|d| !d.is_empty()) else { return };
-    let p = Path::new(&d).join("yami-greet.status");
+    let p = Path::new(&d).join("nemo-greet.status");
     if let Ok(mut f) = std::fs::OpenOptions::new().write(true).create(true).truncate(true).mode(0o600).custom_flags(libc::O_NOFOLLOW).open(p) {
         let _ = writeln!(f, "{what} {ms}");
     }

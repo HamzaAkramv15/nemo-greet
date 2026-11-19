@@ -22,7 +22,7 @@ const PL: &[(&str, &str)] = &[
     ("Wednesday", "Środa"),
     ("another user", "inny użytkownik"),
     ("checking…", "sprawdzam…"),
-    ("demo: the password is yami, esc to leave", "demo: hasło to yami, esc kończy"),
+    ("demo: the password is nemo, esc to leave", "demo: hasło to nemo, esc kończy"),
     ("enter — log in", "enter — zaloguj"),
     ("going to sleep…", "usypianie…"),
     ("no Wayland sessions", "brak sesji Wayland"),

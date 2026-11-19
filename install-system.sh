@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Install (or update) the yami login screen: greetd starts yami-greet inside niri, from the next
-# boot. Run from the repo as yourself; it builds yami-greet and asks for sudo once.
+# Install (or update) the nemo login screen: greetd starts nemo-greet inside niri, from the next
+# boot. Run from the repo as yourself; it builds nemo-greet and asks for sudo once.
 #   install-system.sh [--no-enable] [--yes]   --no-enable: install, leave the login manager alone; --yes: do not ask
 # The installer runs the root half itself (as root):
 #   install-system.sh --system USER [--bin FILE] [--cursor DIR] [--no-enable] [--bin-only]
@@ -9,8 +9,8 @@
 # logind/elogind the greeter user joins seatd's group, so niri gets a seat.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOOK=/var/lib/yami-greet/look STATE=/var/lib/yami-greet/state LOGD=/var/lib/yami-greet/log
-REPLACED=/var/lib/yami-greet/replaced
+LOOK=/var/lib/nemo-greet/look STATE=/var/lib/nemo-greet/state LOGD=/var/lib/nemo-greet/log
+REPLACED=/var/lib/nemo-greet/replaced
 CONF=/etc/greetd/config.toml
 DMS=(sddm gdm lightdm lxdm ly emptty cosmic-greeter plasmalogin display-manager xdm slim)
 
@@ -60,10 +60,10 @@ seat_setup() {
 # runit (Void): runsvdir starts or stops a service as soon as its link comes or goes, so a login
 # manager switched now would end the running session or jump to its own VT. The switch waits for
 # the next boot: a stage-1 script (core-services) does it once and removes itself
-RUNIT_HOOK=/etc/runit/core-services/90-yami-greetd.sh
+RUNIT_HOOK=/etc/runit/core-services/90-nemo-greetd.sh
 runit_switch() {
   if [[ -d /etc/runit/core-services ]]; then
-    { echo "# yami: switches the login manager at this boot (install-system.sh), then removes itself"
+    { echo "# nemo: switches the login manager at this boot (install-system.sh), then removes itself"
       printf '%s\n' "$@"
       echo "rm -f $RUNIT_HOOK"; } >"$RUNIT_HOOK.new" && mv -f "$RUNIT_HOOK.new" "$RUNIT_HOOK"
     echo "runit: the login manager switches at the next boot (this session is untouched)"
@@ -150,8 +150,8 @@ system() {
   ((EUID == 0)) || { echo "install-system.sh --system runs as root" >&2; exit 1; }
   [[ $user =~ ^[a-z_][a-z0-9_.-]*\$?$ ]] && getent passwd "$user" >/dev/null || { echo "no such user: $user" >&2; exit 1; }
   if [[ -n $bin ]]; then
-    install -Dm755 "$bin" /usr/local/bin/.yami-greet.new && mv -f /usr/local/bin/.yami-greet.new /usr/local/bin/yami-greet
-    relabel /usr/local/bin/yami-greet
+    install -Dm755 "$bin" /usr/local/bin/.nemo-greet.new && mv -f /usr/local/bin/.nemo-greet.new /usr/local/bin/nemo-greet
+    relabel /usr/local/bin/nemo-greet
   fi
   ((only)) && return 0
   command -v greetd >/dev/null || { echo "greetd is not installed" >&2; exit 1; }
@@ -159,8 +159,8 @@ system() {
   local g gg
   g="$(greeter_user)" || { echo "greetd has no greeter user" >&2; exit 1; }
   gg="$(id -gn "$g")"
-  # what yami-greet reads: the look (yours, the shell writes it), its memory and log (the greeter's own)
-  install -d -m755 /var/lib/yami-greet
+  # what nemo-greet reads: the look (yours, the shell writes it), its memory and log (the greeter's own)
+  install -d -m755 /var/lib/nemo-greet
   install -d -m755 -o "$user" -g "$(id -gn "$user")" "$LOOK"
   install -d -m700 -o "$g" -g "$gg" "$STATE"
   install -d -m755 -o "$g" -g "$gg" "$LOGD"
@@ -168,34 +168,34 @@ system() {
   # file is made in root's folder and renamed in, so root never writes through a link put there
   if [[ ! -e $STATE/last && ! -L $STATE/last ]]; then
     local tmp
-    tmp="$(mktemp /var/lib/yami-greet/.last.XXXXXX)"
+    tmp="$(mktemp /var/lib/nemo-greet/.last.XXXXXX)"
     printf '%s\nniri\n' "$user" >"$tmp" && chown "$g:$gg" "$tmp" && chmod 600 "$tmp" && mv -fT "$tmp" "$STATE/last" || rm -f -- "$tmp"
   fi
-  install -Dm755 "$ROOT/greet-session" /usr/local/lib/yami/greet-session
-  install -Dm644 -t /usr/local/share/yami-greet/fonts "$ROOT/fonts/Tiny5.ttf" "$ROOT/fonts/DotGothic16-Regular.ttf" "$ROOT/fonts/OFL-tiny5.txt" "$ROOT/fonts/OFL-dotgothic16.txt"
+  install -Dm755 "$ROOT/greet-session" /usr/local/lib/nemo/greet-session
+  install -Dm644 -t /usr/local/share/nemo-greet/fonts "$ROOT/fonts/Tiny5.ttf" "$ROOT/fonts/DotGothic16-Regular.ttf" "$ROOT/fonts/OFL-tiny5.txt" "$ROOT/fonts/OFL-dotgothic16.txt"
   # the pixel cursor: niri of the login screen reads /usr/share/icons only
   if [[ -n $cursor && -d $cursor ]]; then
-    rm -rf -- /usr/share/icons/yami-cursor
-    cp -r "$cursor" /usr/share/icons/yami-cursor
-    chmod -R a+rX /usr/share/icons/yami-cursor
+    rm -rf -- /usr/share/icons/nemo-cursor
+    cp -r "$cursor" /usr/share/icons/nemo-cursor
+    chmod -R a+rX /usr/share/icons/nemo-cursor
   fi
   seat_setup "$g"
   # greetd's own config is kept once (./install.sh --uninstall puts it back); its terminal stays
   mkdir -p /etc/greetd
-  if [[ -f $CONF ]] && ! head -n1 "$CONF" | grep -q '^# yami:' && [[ ! -e $CONF.yami-orig ]]; then
-    cp -p "$CONF" "$CONF.yami-orig"
+  if [[ -f $CONF ]] && ! head -n1 "$CONF" | grep -q '^# nemo:' && [[ ! -e $CONF.nemo-orig ]]; then
+    cp -p "$CONF" "$CONF.nemo-orig"
   fi
   local vt
-  vt="$(awk '/^[[:space:]]*\[/ { s = $0 } s ~ /terminal/ && /^[[:space:]]*vt[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); print; exit }' "$CONF.yami-orig" 2>/dev/null)"
+  vt="$(awk '/^[[:space:]]*\[/ { s = $0 } s ~ /terminal/ && /^[[:space:]]*vt[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); print; exit }' "$CONF.nemo-orig" 2>/dev/null)"
   [[ $vt =~ ^([0-9]+|\"[a-z]+\")$ ]] || vt=1
   # without systemd nothing stops the getty on tty1 for greetd: the login screen takes VT 7
   [[ $INIT != systemd && $vt == 1 ]] && vt=7
-  printf '%s\n' "# yami: the login screen (install-system.sh; ./install.sh --uninstall puts the old file back)" \
-    "[terminal]" "vt = $vt" "" "[default_session]" "command = \"/usr/local/lib/yami/greet-session\"" "user = \"$g\"" >"$CONF.new"
+  printf '%s\n' "# nemo: the login screen (install-system.sh; ./install.sh --uninstall puts the old file back)" \
+    "[terminal]" "vt = $vt" "" "[default_session]" "command = \"/usr/local/lib/nemo/greet-session\"" "user = \"$g\"" >"$CONF.new"
   mv -f "$CONF.new" "$CONF"
-  # the SDDM theme yami had before its own login screen
-  rm -rf -- /usr/share/sddm/themes/yami /etc/sddm.conf.d/zz-yami.conf /etc/sddm.conf.d/10-yami.conf
-  relabel /var/lib/yami-greet /usr/local/lib/yami /usr/local/share/yami-greet /usr/share/icons/yami-cursor /etc/greetd
+  # the SDDM theme nemo had before its own login screen
+  rm -rf -- /usr/share/sddm/themes/nemo /etc/sddm.conf.d/zz-nemo.conf /etc/sddm.conf.d/10-nemo.conf
+  relabel /var/lib/nemo-greet /usr/local/lib/nemo /usr/local/share/nemo-greet /usr/share/icons/nemo-cursor /etc/greetd
   ((enable)) && enable_greetd
   return 0
 }
@@ -216,9 +216,9 @@ for a; do case "$a" in --no-enable) ENABLE=(--no-enable) ;; -y | --yes) YES=1 ;;
 # человек у терминала решает сам; установщик и шелл спросили до запуска и передают --yes
 if ((!YES)) && [[ -t 0 && -t 1 ]]; then
   case "${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}" in
-    ru*) q="Поставить экран входа yami-greet? Он заменит текущий менеджер входа со следующей загрузки, нужен sudo." ;;
-    pt*) q="Instalar a tela de login yami-greet? Ela substitui o gerenciador de login atual a partir da próxima inicialização; precisa de sudo." ;;
-    *) q="Install the yami-greet login screen? It replaces the current login manager from the next boot and needs sudo." ;;
+    ru*) q="Поставить экран входа nemo-greet? Он заменит текущий менеджер входа со следующей загрузки, нужен sudo." ;;
+    pt*) q="Instalar a tela de login nemo-greet? Ela substitui o gerenciador de login atual a partir da próxima inicialização; precisa de sudo." ;;
+    *) q="Install the nemo-greet login screen? It replaces the current login manager from the next boot and needs sudo." ;;
   esac
   read -r -p "$q [y/N] " a || a=n
   [[ $a =~ ^[yYдДsS] ]] || { echo "cancelled"; exit 1; }
@@ -237,29 +237,29 @@ fi
 # the updater's clone builds into the cache (install.sh did it a moment ago): the same target, so
 # nothing is built twice; a checkout of your own builds into its shell/target
 TARGET="${CARGO_TARGET_DIR:-}"
-[[ -z $TARGET && $ROOT == "${XDG_DATA_HOME:-$HOME/.local/share}/yami/src" ]] && TARGET="${XDG_CACHE_HOME:-$HOME/.cache}/yami/target"
+[[ -z $TARGET && $ROOT == "${XDG_DATA_HOME:-$HOME/.local/share}/nemo/src" ]] && TARGET="${XDG_CACHE_HOME:-$HOME/.cache}/nemo/target"
 TARGET="${TARGET:-$ROOT/target}"
 # готовый бинарь лежит рядом (установка из архива выпуска): собирать нечего
-GREET="$ROOT/yami-greet"
+GREET="$ROOT/nemo-greet"
 if [[ ! -x $GREET ]]; then
   (cd "$ROOT" && cargo build --release --locked --target-dir "$TARGET")
-  GREET="$TARGET/release/yami-greet"
+  GREET="$TARGET/release/nemo-greet"
 fi
 TMP="$(mktemp -d)"
 trap 'rm -rf -- "$TMP"' EXIT
-# курсор экрана входа: его рисует шелл yami; без шелла — системный
-if command -v yami-shell >/dev/null; then yami-shell recolor --cursor-to "$TMP/yami-cursor" || true; fi
+# курсор экрана входа: его рисует шелл nemo; без шелла — системный
+if command -v nemo-shell >/dev/null; then nemo-shell recolor --cursor-to "$TMP/nemo-cursor" || true; fi
 # the login manager greetd replaces (systemd): ./install.sh --uninstall enables it again; on OpenRC
-# and runit the root half writes them down itself (/var/lib/yami-greet/replaced)
-STATE_D="${XDG_STATE_HOME:-$HOME/.local/state}/yami"
+# and runit the root half writes them down itself (/var/lib/nemo-greet/replaced)
+STATE_D="${XDG_STATE_HOME:-$HOME/.local/state}/nemo"
 prev="$(basename "$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)" .service)"
 if [[ -n $prev && $prev != greetd && ! -s $STATE_D/login-dm ]]; then
   mkdir -p "$STATE_D" && printf '%s\n' "$prev" >"$STATE_D/login-dm"
 fi
-$SU "$ROOT/install-system.sh" --system "$(id -un)" --bin "$GREET" --cursor "$TMP/yami-cursor" "${ENABLE[@]}"
+$SU "$ROOT/install-system.sh" --system "$(id -un)" --bin "$GREET" --cursor "$TMP/nemo-cursor" "${ENABLE[@]}"
 # the look of the shell, now (it keeps it current itself)
-yami-shell login sync >/dev/null 2>&1 || true
-echo "login screen: yami-greet in greetd ($(/usr/local/bin/yami-greet --version))"
+nemo-shell login sync >/dev/null 2>&1 || true
+echo "login screen: nemo-greet in greetd ($(/usr/local/bin/nemo-greet --version))"
 # SDDM (the login screen before 2.6, often installed by this installer) is off now, not removed: it
-# may be KDE's. Once the new login screen has let you in, `yami doctor` prints the command to remove it
-command -v sddm >/dev/null && echo "SDDM is turned off, not removed; after the first login here, yami doctor tells how to remove it if nothing else uses it"
+# may be KDE's. Once the new login screen has let you in, `nemo doctor` prints the command to remove it
+command -v sddm >/dev/null && echo "SDDM is turned off, not removed; after the first login here, nemo doctor tells how to remove it if nothing else uses it"

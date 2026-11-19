@@ -7,7 +7,7 @@ const PT_BR: &[(&str, &str)] = &[
     ("another user", "outro usuário"),
     ("checking…", "verificando…"),
     ("enter — log in", "enter — entrar"),
-    ("demo: the password is yami, esc to leave", "demo: a senha é yami, esc para sair"),
+    ("demo: the password is nemo, esc to leave", "demo: a senha é nemo, esc para sair"),
     ("sleep", "suspender"),
     ("reboot", "reiniciar"),
     ("power off", "desligar"),

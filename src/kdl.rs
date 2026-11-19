@@ -1,6 +1,6 @@
-// Конфиг niri для экрана входа (`yami-greet kdl`, его пишет greet-session при каждом старте).
+// Конфиг niri для экрана входа (`nemo-greet kdl`, его пишет greet-session при каждом старте).
 // Свой файл niri вида не читает: из look.json берутся только мониторы (то, что написал шелл в
-// ~/.config/yami/niri/outputs.kdl) и раскладки, и каждое значение проверяется по белому списку символов.
+// ~/.config/nemo/niri/outputs.kdl) и раскладки, и каждое значение проверяется по белому списку символов.
 // Иначе файл пользователя мог бы дать niri экрана входа spawn или бинд — а он видит пароли всех.
 // --plain: без мониторов, раскладок и ключей новых niri (если полный конфиг не прошёл проверку).
 
@@ -76,7 +76,7 @@ pub fn outputs(text: &str) -> String {
 }
 
 /// ночной свет и на экране входа: если шелл его включил (nightOn), niri экрана входа запускает
-/// wlsunset с теми же аргументами, что у шелла (yami_px::night::args). Значения — чужие: числа
+/// wlsunset с теми же аргументами, что у шелла (nemo_px::night::args). Значения — чужие: числа
 /// зажаты в пределы там же, а в команду попадают только цифры, точки и минусы
 pub fn night(look: &Value) -> String {
     let on = look.get("nightOn").and_then(|v| v.as_bool()).unwrap_or(false);
@@ -86,7 +86,7 @@ pub fn night(look: &Value) -> String {
     let num = |k: &str| look.get(k).and_then(|v| v.as_f64()).filter(|x| x.is_finite());
     let place = num("nightLat").zip(num("nightLon"));
     let always = look.get("nightAlways").and_then(|v| v.as_bool()).unwrap_or(false);
-    let args = yami_px::night::args(int("nightTemp", 4000), always, place, int("nightOnH", 20), int("nightOffH", 7));
+    let args = nemo_px::night::args(int("nightTemp", 4000), always, place, int("nightOnH", 20), int("nightOffH", 7));
     let list: Vec<String> = std::iter::once(bin.to_string()).chain(args).map(|a| q(&a)).collect();
     format!("\nspawn-at-startup {}\n", list.join(" "))
 }
@@ -95,10 +95,10 @@ fn q(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
-/// весь конфиг; me — путь к yami-greet
+/// весь конфиг; me — путь к nemo-greet
 pub fn config(look: &Value, plain: bool, me: &str) -> String {
     let s = |k: &str| look.get(k).and_then(|v| v.as_str()).unwrap_or("").trim().to_string();
-    let mut c = String::from("// yami-greet: niri of the login screen (written by `yami-greet kdl` at every start)\n\n");
+    let mut c = String::from("// nemo-greet: niri of the login screen (written by `nemo-greet kdl` at every start)\n\n");
     c += "hotkey-overlay {\n    skip-at-startup\n}\nprefer-no-csd\nscreenshot-path null\nanimations {\n    off\n}\n";
     if !plain {
         // ключи niri 25.x: без них старый niri конфиг не примет, тогда идёт --plain
@@ -106,8 +106,8 @@ pub fn config(look: &Value, plain: bool, me: &str) -> String {
         // чёрный: из него экран входа проявляется и в него уходит (между ним и сеансом — тоже чёрный)
         c += "layout {\n    background-color \"#000000\"\n}\n";
     }
-    if std::path::Path::new("/usr/share/icons/yami-cursor/cursors").is_dir() {
-        c += "cursor {\n    xcursor-theme \"yami-cursor\"\n    xcursor-size 24\n    hide-when-typing\n}\n";
+    if std::path::Path::new("/usr/share/icons/nemo-cursor/cursors").is_dir() {
+        c += "cursor {\n    xcursor-theme \"nemo-cursor\"\n    xcursor-size 24\n    hide-when-typing\n}\n";
     }
     c += "input {\n    keyboard {\n";
     let (lay, opt) = (s("kbLayout"), s("kbSwitch"));
@@ -128,10 +128,10 @@ pub fn config(look: &Value, plain: bool, me: &str) -> String {
     }
     // экран входа вышел (вошли, упал, выключают) — niri следом; код выхода — greet-session (в свою
     // папку XDG_RUNTIME_DIR, её создаёт greet-session; без неё — никуда, не в общий /tmp). niri
-    // отдаёт запущенным /dev/null: сообщения экрана входа — в журнал greet-session (YAMI_GREET_LOG)
+    // отдаёт запущенным /dev/null: сообщения экрана входа — в журнал greet-session (NEMO_GREET_LOG)
     c += &format!(
         "\nspawn-at-startup \"sh\" \"-c\" {} {}\n",
-        q("\"$0\" 2>>\"${YAMI_GREET_LOG:-/dev/null}\"; rc=$?; [ -d \"$XDG_RUNTIME_DIR\" ] && echo $rc >\"$XDG_RUNTIME_DIR/yami-greet.rc\"; \"${YAMI_GREET_NIRI:-niri}\" msg action quit --skip-confirmation"),
+        q("\"$0\" 2>>\"${NEMO_GREET_LOG:-/dev/null}\"; rc=$?; [ -d \"$XDG_RUNTIME_DIR\" ] && echo $rc >\"$XDG_RUNTIME_DIR/nemo-greet.rc\"; \"${NEMO_GREET_NIRI:-niri}\" msg action quit --skip-confirmation"),
         q(me)
     );
     c
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn outputs_whitelist() {
-        let t = "// yami\n\noutput \"DP-2\" {\n    mode \"1920x1080@180.000\"\n    scale 1\n    transform \"normal\"\n    position x=0 y=0\n    variable-refresh-rate on-demand=true\n}\n\noutput \"HDMI-A-1\" {\n    off\n}\nspawn-at-startup \"evil\"\noutput \"x\\\" { spawn\" {\n    mode \"1x1@60;rm\"\n}\n";
+        let t = "// nemo\n\noutput \"DP-2\" {\n    mode \"1920x1080@180.000\"\n    scale 1\n    transform \"normal\"\n    position x=0 y=0\n    variable-refresh-rate on-demand=true\n}\n\noutput \"HDMI-A-1\" {\n    off\n}\nspawn-at-startup \"evil\"\noutput \"x\\\" { spawn\" {\n    mode \"1x1@60;rm\"\n}\n";
         let o = super::outputs(t);
         assert!(o.contains("output \"DP-2\" {\n    mode \"1920x1080@180.000\"\n    scale 1\n    transform \"normal\"\n    position x=0 y=0\n}\n"));
         assert!(o.contains("output \"HDMI-A-1\" {\n    off\n}"));

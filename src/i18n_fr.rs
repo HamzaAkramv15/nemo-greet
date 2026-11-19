@@ -22,7 +22,7 @@ const FR: &[(&str, &str)] = &[
     ("Wednesday", "Mercredi"),
     ("another user", "un autre utilisateur"),
     ("checking…", "vérification…"),
-    ("demo: the password is yami, esc to leave", "démo : le mot de passe est yami, échap pour quitter"),
+    ("demo: the password is nemo, esc to leave", "démo : le mot de passe est nemo, échap pour quitter"),
     ("enter — log in", "entrée — se connecter"),
     ("going to sleep…", "mise en veille…"),
     ("no Wayland sessions", "aucune session Wayland"),

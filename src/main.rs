@@ -1,12 +1,12 @@
-// yami-greet — экран входа yami: приветствие greetd, которое рисует себя в niri тем же пиксельным
+// nemo-greet — экран входа nemo: приветствие greetd, которое рисует себя в niri тем же пиксельным
 // лицом, что экран блокировки шелла. Вид (палитра, обои, язык, мониторы, раскладки) выкладывает
-// шелл в /var/lib/yami-greet/look; пароль уходит только в greetd.
+// шелл в /var/lib/nemo-greet/look; пароль уходит только в greetd.
 //
-//   yami-greet                  экран входа (его запускает niri из greet-session)
-//   yami-greet --demo           то же без greetd, пароль «yami», Esc — выйти (в окне niri или
+//   nemo-greet                  экран входа (его запускает niri из greet-session)
+//   nemo-greet --demo           то же без greetd, пароль «nemo», Esc — выйти (в окне niri или
 //                               поверх своего сеанса: кнопка «показать» в настройках шелла)
-//   yami-greet kdl [--plain]    конфиг niri экрана входа в stdout
-//   yami-greet shot [-o DIR] [--lang en] [--size WxH]   снимки состояний в PNG без Wayland
+//   nemo-greet kdl [--plain]    конфиг niri экрана входа в stdout
+//   nemo-greet shot [-o DIR] [--lang en] [--size WxH]   снимки состояний в PNG без Wayland
 
 mod app;
 mod data;
@@ -19,22 +19,22 @@ mod niri;
 use draw::{Phase, G};
 use std::path::PathBuf;
 use std::time::Instant;
-use yami_px::font::Fonts;
-use yami_px::look::Look;
+use nemo_px::font::Fonts;
+use nemo_px::look::Look;
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let code = match args.first().map(String::as_str) {
         Some("--version") => {
-            println!("yami-greet {}", env!("CARGO_PKG_VERSION"));
+            println!("nemo-greet {}", env!("CARGO_PKG_VERSION"));
             0
         }
         Some("-h") | Some("--help") => {
-            println!("yami-greet [--demo] | kdl [--plain] | shot [-o DIR] [--lang en|ru|pt-BR] [--size WxH]");
+            println!("nemo-greet [--demo] | kdl [--plain] | shot [-o DIR] [--lang en|ru|pt-BR] [--size WxH]");
             0
         }
         Some("kdl") => {
-            let me = yami_px::paths::self_exe().to_string_lossy().to_string();
+            let me = nemo_px::paths::self_exe().to_string_lossy().to_string();
             print!("{}", kdl::config(&data::look_json(), args.iter().any(|a| a == "--plain"), &me));
             0
         }
@@ -58,7 +58,7 @@ fn state(v: &serde_json::Value, demo: bool) -> G {
     let look = Look::from_json(v, None);
     i18n::set(&look.lang);
     // формат часов (шелл решает сам: как на столе или свой): AM/PM, если clock12
-    yami_px::time::set_hour12(v.get("clock12").and_then(|x| x.as_bool()).unwrap_or(false));
+    nemo_px::time::set_hour12(v.get("clock12").and_then(|x| x.as_bool()).unwrap_or(false));
     let opts = data::Opts::from(v);
     // «имя вводят сами»: список пользователей не читается и не показывается
     let users = if opts.list { data::users() } else { vec![] };
@@ -68,10 +68,10 @@ fn state(v: &serde_json::Value, demo: bool) -> G {
     let session = sessions.iter().position(|s| s.id == ls).or_else(|| sessions.iter().position(|s| s.id.contains("niri"))).unwrap_or(0);
     let layouts: Vec<String> = v.get("kbLayout").and_then(|x| x.as_str()).unwrap_or("").split(',').map(|s| s.split('(').next().unwrap_or("").trim().to_string()).filter(|s| !s.is_empty()).collect();
     // поле с запасом: пароль не переезжает в памяти, пока его набирают (старые копии не остаются)
-    let mut field = yami_px::ui::Field::default();
+    let mut field = nemo_px::ui::Field::default();
     field.text.reserve(1024);
     let mut g = G {
-        veil: yami_px::face::veil(&look.theme, Some(opts.dim)),
+        veil: nemo_px::face::veil(&look.theme, Some(opts.dim)),
         opts,
         look,
         wall: None,
@@ -136,7 +136,7 @@ fn greet(demo: bool) -> i32 {
     let w = wall.join().ok().flatten();
     g.set_wall(w);
     g.born = Instant::now();
-    yami_px::shed_code_later(10);
+    nemo_px::shed_code_later(10);
     app::run(g, f, t0)
 }
 
@@ -163,7 +163,7 @@ fn shot(args: &[String]) -> i32 {
     let mut v = data::look_json();
     if v.is_null() {
         // вид не выложен (машина без экрана входа): вид шелла
-        v = std::fs::read_to_string(yami_px::paths::shell_settings()).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or(serde_json::Value::Null);
+        v = std::fs::read_to_string(nemo_px::paths::shell_settings()).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or(serde_json::Value::Null);
     }
     if let Some(o) = v.as_object_mut() {
         o.insert("animations".into(), false.into());
@@ -175,22 +175,22 @@ fn shot(args: &[String]) -> i32 {
         }
     }
     // русская надпись без перевода — ошибка на любом языке, кроме русского; `--fit`: надписи, которым тесно
-    let audit = !matches!(yami_px::i18n::normalize(&lang), "ru" | "");
+    let audit = !matches!(nemo_px::i18n::normalize(&lang), "ru" | "");
     i18n::audit(audit);
-    yami_px::gfx::watch_text(args.iter().any(|a| a == "--fit"));
+    nemo_px::gfx::watch_text(args.iter().any(|a| a == "--fit"));
     let _ = std::fs::create_dir_all(&out);
     let mut bad = 0;
     let wall = data::wall();
     let mut fonts = fonts(&Look::from_json(&v, None));
-    let mut ic = yami_px::icons::Icons::new("");
+    let mut ic = nemo_px::icons::Icons::new("");
     for target in ["pass", "busy", "wrong", "caps", "prompt", "name", "other", "second", "minimal", "demo"] {
         let mut g = state(&v, target == "demo");
         g.opts.list = true;
         g.set_wall(if target == "minimal" { None } else { wall.clone() });
-        g.host = "yami".into();
+        g.host = "nemo".into();
         g.power = true;
         g.blink = true;
-        g.users = vec![data::User { name: "yami".into(), real: "Yami".into() }, data::User { name: "guest".into(), real: String::new() }];
+        g.users = vec![data::User { name: "nemo".into(), real: "Yami".into() }, data::User { name: "guest".into(), real: String::new() }];
         g.user = 0;
         g.phase = Phase::Pass;
         g.sessions = vec![data::Session { id: "niri".into(), name: "Niri".into(), cmd: vec!["niri-session".into()], desktops: "niri".into() }];
@@ -212,7 +212,7 @@ fn shot(args: &[String]) -> i32 {
                 g.opts.list = false;
                 g.users.clear();
                 g.phase = Phase::Name;
-                g.field.set("yami");
+                g.field.set("nemo");
             }
             "other" => {
                 g.user = g.users.len();
@@ -228,14 +228,14 @@ fn shot(args: &[String]) -> i32 {
         }
         let mut buf = vec![0u32; (w * h) as usize];
         {
-            let mut ui = draw::Ui { cv: yami_px::gfx::Canvas::new(&mut buf, w, h), f: &mut fonts, ic: &mut ic, t: g.look.theme, zones: vec![], ptr: None, down: false, anim: false, blink: true, tr: i18n::tr };
+            let mut ui = draw::Ui { cv: nemo_px::gfx::Canvas::new(&mut buf, w, h), f: &mut fonts, ic: &mut ic, t: g.look.theme, zones: vec![], ptr: None, down: false, anim: false, blink: true, tr: i18n::tr };
             draw::draw(&mut ui, &g, w, h, target != "second");
         }
         let rgba: Vec<u8> = buf.iter().flat_map(|p| [(p >> 16) as u8, (p >> 8) as u8, *p as u8, 255]).collect();
         let path = out.join(format!("greet-{target}.png"));
         let _ = image::save_buffer(&path, &rgba, w as u32, h as u32, image::ColorType::Rgba8);
         println!("{}", path.display());
-        for p in yami_px::gfx::fit_report() {
+        for p in nemo_px::gfx::fit_report() {
             println!("  layout [{target}]: {p}");
             bad = 1;
         }

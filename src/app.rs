@@ -38,10 +38,10 @@ use wayland_client::{
 use wayland_protocols::wp::cursor_shape::v1::client::wp_cursor_shape_device_v1::{Shape, WpCursorShapeDeviceV1};
 use wayland_protocols::wp::fractional_scale::v1::client::{wp_fractional_scale_manager_v1 as frac_mgr, wp_fractional_scale_v1 as frac};
 use wayland_protocols::wp::viewporter::client::{wp_viewport, wp_viewporter};
-use yami_px::font::Fonts;
-use yami_px::gfx::Canvas;
-use yami_px::icons::Icons;
-use yami_px::ui::{Cur, Zone};
+use nemo_px::font::Fonts;
+use nemo_px::gfx::Canvas;
+use nemo_px::icons::Icons;
+use nemo_px::ui::{Cur, Zone};
 
 /// простой без ввода: недописанный пароль стирается, курсор поля перестаёт мигать (ни одной
 /// перерисовки до ввода), мониторы гаснут через data::Opts::off_min
@@ -114,7 +114,7 @@ pub struct App {
 
 pub fn run(g: G, fonts: Fonts, t0: Instant) -> i32 {
     let Ok(conn) = Connection::connect_to_env() else {
-        eprintln!("yami-greet: no Wayland display");
+        eprintln!("nemo-greet: no Wayland display");
         return 1;
     };
     let Ok((globals, queue)) = registry_queue_init::<App>(&conn) else { return 1 };
@@ -137,7 +137,7 @@ pub fn run(g: G, fonts: Fonts, t0: Instant) -> i32 {
         crate::greetd::spawn(ask_rx, send);
     }
     let (Ok(compositor), Ok(shm), Ok(layer_shell)) = (CompositorState::bind(&globals, &qh), Shm::bind(&globals, &qh), LayerShell::bind(&globals, &qh)) else {
-        eprintln!("yami-greet: the compositor has no layer-shell");
+        eprintln!("nemo-greet: the compositor has no layer-shell");
         return 1;
     };
     let mut app = App {
@@ -169,7 +169,7 @@ pub fn run(g: G, fonts: Fonts, t0: Instant) -> i32 {
         icons: Icons::new(""),
         g,
         ask,
-        minute: yami_px::time::local_now().min,
+        minute: nemo_px::time::local_now().min,
         last_input: Instant::now(),
         screens_off: false,
         t0,
@@ -189,7 +189,7 @@ pub fn run(g: G, fonts: Fonts, t0: Instant) -> i32 {
     if !app.g.demo {
         let _ = handle.insert_source(Timer::from_duration(Duration::from_secs(2)), |_, _, app: &mut App| {
             if app.surfs.is_empty() {
-                eprintln!("yami-greet: no monitor is on, turning one on");
+                eprintln!("nemo-greet: no monitor is on, turning one on");
                 std::thread::spawn(crate::niri::any_output_on);
             }
             TimeoutAction::Drop
@@ -237,7 +237,7 @@ impl App {
         self.next_id += 1;
         let frac = self.frac_mgr.as_ref().map(|m| m.get_fractional_scale(&surface, &self.qh, id));
         let vp = self.viewporter.as_ref().map(|v| v.get_viewport(&surface, &self.qh, ()));
-        let layer = self.layer_shell.create_layer_surface(&self.qh, surface, Layer::Overlay, Some("yami-greet"), Some(&o));
+        let layer = self.layer_shell.create_layer_surface(&self.qh, surface, Layer::Overlay, Some("nemo-greet"), Some(&o));
         layer.set_anchor(Anchor::TOP | Anchor::BOTTOM | Anchor::LEFT | Anchor::RIGHT);
         layer.set_exclusive_zone(-1);
         layer.set_keyboard_interactivity(KeyboardInteractivity::Exclusive);
@@ -255,7 +255,7 @@ impl App {
                 self.dirty_main();
             }
         }
-        let m = yami_px::time::local_now().min;
+        let m = nemo_px::time::local_now().min;
         if m != self.minute {
             self.minute = m;
             if !self.screens_off {
@@ -330,7 +330,7 @@ impl App {
         if w <= 0 || h <= 0 {
             return;
         }
-        let (pw, ph) = if s.vp.is_none() || s.scale == 1.0 { (w, h) } else { yami_px::gfx::phys(w, h, s.scale) };
+        let (pw, ph) = if s.vp.is_none() || s.scale == 1.0 { (w, h) } else { nemo_px::gfx::phys(w, h, s.scale) };
         let up = (pw, ph) != (w, h);
         let need = (pw * ph * 4) as usize;
         if s.pool.as_ref().map(|p| p.len() < need).unwrap_or(true) {
@@ -356,7 +356,7 @@ impl App {
             s.anim = ui.anim;
         }
         if up {
-            yami_px::gfx::upscale(&scratch, w, h, unsafe { std::slice::from_raw_parts_mut(out_ptr, out_len) }, pw, ph);
+            nemo_px::gfx::upscale(&scratch, w, h, unsafe { std::slice::from_raw_parts_mut(out_ptr, out_len) }, pw, ph);
         }
         self.scratch = scratch;
         let surf = s.layer.wl_surface().clone();
@@ -374,7 +374,7 @@ impl App {
             // первый кадр: greet-session больше не считает этот запуск несостоявшимся
             let ms = self.ms();
             self.up = Some(ms);
-            eprintln!("yami-greet: first frame in {ms} ms ({w}x{h}, {} monitor(s))", self.surfs.len());
+            eprintln!("nemo-greet: first frame in {ms} ms ({w}x{h}, {} monitor(s))", self.surfs.len());
             if !self.g.demo {
                 crate::data::status("up", ms);
             }
@@ -416,7 +416,7 @@ impl App {
                 self.dirty_all();
             }
             Ev::Lost(why) => {
-                eprintln!("yami-greet: greetd: {why}");
+                eprintln!("nemo-greet: greetd: {why}");
                 g.status = crate::i18n::tr("нет связи с greetd").to_string();
                 g.phase = back;
                 // без greetd войти нельзя: выйти через 3 с, greet-session решит, что дальше
@@ -447,7 +447,7 @@ impl App {
             Phase::Pass | Phase::Name => {
                 if g.phase == Phase::Name {
                     let name = text.trim().to_string();
-                    yami_px::ui::wipe(&mut text);
+                    nemo_px::ui::wipe(&mut text);
                     if name.is_empty() || name.len() > 64 || !name.chars().all(|c| c.is_alphanumeric() || "._-@".contains(c)) {
                         return;
                     }
@@ -473,7 +473,7 @@ impl App {
                 g.phase = Phase::Busy;
                 let _ = self.ask.send(Ask::Answer(Some(text)));
             }
-            _ => yami_px::ui::wipe(&mut text),
+            _ => nemo_px::ui::wipe(&mut text),
         }
     }
 

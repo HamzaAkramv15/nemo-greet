@@ -1,15 +1,15 @@
 // Состояние экрана входа и его отрисовка. Лицо — общее с экраном блокировки шелла
-// (yami_px::face): обои под вуалью, часы, дата, 闇. Под ним — пользователь, поле пароля, строка
+// (nemo_px::face): обои под вуалью, часы, дата, 闇. Под ним — пользователь, поле пароля, строка
 // состояния; внизу слева — сеанс и раскладка, по центру — сон, перезагрузка, выключение,
 // вверху слева — имя машины (что из этого видно — настройки, data::Opts). Появление — проявлением
 // клетками из чёрного, уход — в чёрный; последний кадр ухода целиком чёрный: его и видно, пока
 // greetd запускает сеанс.
 
 use crate::data::{Opts, Session, User};
-use yami_px::font::{self, PX};
-use yami_px::gfx::{BoxStyle, Img, C, R};
-use yami_px::look::Look;
-use yami_px::ui::{Action, Cur, Field, Tone};
+use nemo_px::font::{self, PX};
+use nemo_px::gfx::{BoxStyle, Img, C, R};
+use nemo_px::look::Look;
+use nemo_px::ui::{Action, Cur, Field, Tone};
 use std::time::Instant;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -31,7 +31,7 @@ impl Action for Act {
     }
 }
 
-pub type Ui<'a, 'b> = yami_px::ui::Ui<'a, 'b, Act>;
+pub type Ui<'a, 'b> = nemo_px::ui::Ui<'a, 'b, Act>;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Phase {
@@ -116,7 +116,7 @@ impl G {
     /// новая картинка обоев: вуаль впекается сразу, кадр потом — копирование
     pub fn set_wall(&mut self, wall: Option<Img>) {
         self.wall = wall.map(|mut i| {
-            yami_px::face::bake(&mut i, self.veil);
+            nemo_px::face::bake(&mut i, self.veil);
             i
         });
     }
@@ -156,10 +156,10 @@ pub fn draw(ui: &mut Ui, g: &G, w: i32, h: i32, main: bool) {
         ui.anim = true;
         return;
     }
-    yami_px::face::backdrop_with(ui, g.wall.as_ref(), w, h, g.veil, g.wall.is_some());
-    let dy = if g.opts.clock { yami_px::face::clock(ui, w, h) - 30 } else { h / 2 - 90 };
+    nemo_px::face::backdrop_with(ui, g.wall.as_ref(), w, h, g.veil, g.wall.is_some());
+    let dy = if g.opts.clock { nemo_px::face::clock(ui, w, h) - 30 } else { h / 2 - 90 };
     if g.opts.kanji {
-        yami_px::face::kanji(ui, w, h);
+        nemo_px::face::kanji(ui, w, h);
     }
     ui.zone(R::new(0, 0, w, h), Act::Block, Cur::Default);
     if main {
@@ -259,7 +259,7 @@ fn draw_login(ui: &mut Ui, g: &G, w: i32, dy: i32) {
     } else if g.fails > 0 {
         (crate::tf!("неверно ×{}", "wrong ×{}", "incorreta ×{}", g.fails), t.ember)
     } else if g.demo {
-        ("демо: пароль yami, esc — выйти".to_string(), t.text_faint)
+        ("демо: пароль nemo, esc — выйти".to_string(), t.text_faint)
     } else {
         ("enter — войти".to_string(), t.text_faint)
     };

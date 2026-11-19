@@ -1,17 +1,17 @@
-> **Nemo fork.** This is `nemo-greet`, Nemo's fork of [yami-greet](https://github.com/Trendorin/yami-greet) by Trendorin (MIT, thank you). It draws with Nemo's fork of yami-px (the Nemo fish, 12-hour clock) and follows the desktop's night light. Everything below is the original README.
+> **Nemo fork.** This is `nemo-greet`, Nemo's fork of [yami-greet](https://github.com/Trendorin/yami-greet) by Trendorin (MIT, thank you). It draws with Nemo's fork of nemo-px (the Nemo fish, 12-hour clock) and follows the desktop's night light. Everything below is the original README.
 
-# yami-greet
+# nemo-greet
 
 English · [Русский](README.ru.md)
 
 A login screen: a [greetd](https://sr.ht/~kennylevinsen/greetd/) greeter that draws itself inside
-niri with the same pixel face as the yami lock screen: a big clock, your wallpaper under a veil,
+niri with the same pixel face as the nemo lock screen: a big clock, your wallpaper under a veil,
 the users to pick from, sessions, keyboard layouts and power buttons. The password goes to greetd
-only and is wiped from memory right after. Part of the [yami](https://github.com/Trendorin/yami)
+only and is wiped from memory right after. Part of the [Nemo](https://github.com/HamzaAkramv15/nemo)
 desktop, and works on its own with any session listed in `wayland-sessions` (niri, Hyprland, Sway,
 KDE, GNOME…).
 
-![yami-greet](.github/assets/pixel.png)
+![nemo-greet](.github/assets/pixel.png)
 
 ## What it does
 
@@ -28,13 +28,13 @@ KDE, GNOME…).
 You need greetd and niri from your distribution, Rust 1.89 or newer to build, and sudo:
 
 ```sh
-git clone https://github.com/Trendorin/yami-greet
-cd yami-greet
+git clone https://github.com/HamzaAkramv15/nemo-greet
+cd nemo-greet
 ./install-system.sh
 ```
 
-It builds as you and asks for sudo once: greetd's config (the old one kept as `config.toml.yami-orig`),
-`/var/lib/yami-greet`, the session script `/usr/local/lib/yami/greet-session`, its fonts and the
+It builds as you and asks for sudo once: greetd's config (the old one kept as `config.toml.nemo-orig`),
+`/var/lib/nemo-greet`, the session script `/usr/local/lib/nemo/greet-session`, its fonts and the
 cursor, and it makes greetd the login manager from the next boot (systemd, OpenRC or runit; without
 logind the greeter joins seatd's group). `--no-enable` installs and leaves your login manager alone.
 
@@ -47,20 +47,20 @@ failures agreety comes up by itself.
 ## Try it without logging out
 
 ```sh
-yami-greet --demo           # no greetd; the password is «yami», Esc leaves
+nemo-greet --demo           # no greetd; the password is «nemo», Esc leaves
 ```
 
-Run inside niri it opens over your session. `yami-greet shot -o DIR` draws every state as PNG
-without Wayland. The log of the real thing: `/var/lib/yami-greet/log/greet.log`.
+Run inside niri it opens over your session. `nemo-greet shot -o DIR` draws every state as PNG
+without Wayland. The log of the real thing: `/var/lib/nemo-greet/log/greet.log`.
 
 ## Look
 
-The greeter runs as greetd's user, so it reads its look from `/var/lib/yami-greet/look/` (root's to
-write; the yami shell fills it in by itself):
+The greeter runs as greetd's user, so it reads its look from `/var/lib/nemo-greet/look/` (root's to
+write; the nemo shell fills it in by itself):
 
 | File | What |
 |---|---|
-| `look.json` | the same keys as `~/.config/yami/style.json` (`preset`, `palette` or `accent`, `light`, `corners`, `font`, `lang`, `colors`…) and the ones below |
+| `look.json` | the same keys as `~/.config/nemo/style.json` (`preset`, `palette` or `accent`, `light`, `corners`, `font`, `lang`, `colors`…) and the ones below |
 | `wall.png` | the wallpaper, any size: it covers the screen; none: the theme colour |
 
 | Key | Default | What |
@@ -78,9 +78,9 @@ write; the yami shell fills it in by itself):
 For example:
 
 ```sh
-echo '{ "preset": "yami", "palette": "ice", "greetUsers": "name", "kbLayout": "us,de" }' |
-  sudo tee /var/lib/yami-greet/look/look.json
-sudo install -m 644 ~/Pictures/wall.png /var/lib/yami-greet/look/wall.png
+echo '{ "preset": "nemo", "palette": "ice", "greetUsers": "name", "kbLayout": "us,de" }' |
+  sudo tee /var/lib/nemo-greet/look/look.json
+sudo install -m 644 ~/Pictures/wall.png /var/lib/nemo-greet/look/wall.png
 ```
 
 The greeter reads the files at its next start, with limits on size, and never follows a link there.

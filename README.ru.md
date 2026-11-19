@@ -1,14 +1,14 @@
-# yami-greet
+# nemo-greet
 
 [English](README.md) · Русский
 
 Экран входа: greeter для [greetd](https://sr.ht/~kennylevinsen/greetd/), который рисует себя внутри
-niri тем же пиксельным лицом, что экран блокировки yami: большие часы, твои обои под вуалью,
+niri тем же пиксельным лицом, что экран блокировки nemo: большие часы, твои обои под вуалью,
 пользователи на выбор, сеансы, раскладки и кнопки питания. Пароль уходит только в greetd и сразу
-стирается из памяти. Часть рабочего стола [yami](https://github.com/Trendorin/yami), которая работает
+стирается из памяти. Часть рабочего стола [Nemo](https://github.com/HamzaAkramv15/nemo), которая работает
 и сама по себе с любым сеансом из `wayland-sessions` (niri, Hyprland, Sway, KDE, GNOME…).
 
-![yami-greet](.github/assets/pixel.png)
+![nemo-greet](.github/assets/pixel.png)
 
 ## Что умеет
 
@@ -25,13 +25,13 @@ niri тем же пиксельным лицом, что экран блокир
 Нужны greetd и niri из твоего дистрибутива, Rust 1.89 или новее для сборки и sudo:
 
 ```sh
-git clone https://github.com/Trendorin/yami-greet
-cd yami-greet
+git clone https://github.com/HamzaAkramv15/nemo-greet
+cd nemo-greet
 ./install-system.sh
 ```
 
 Собирает от твоего имени и один раз просит sudo: конфиг greetd (старый остаётся как
-`config.toml.yami-orig`), `/var/lib/yami-greet`, скрипт сеанса `/usr/local/lib/yami/greet-session`,
+`config.toml.nemo-orig`), `/var/lib/nemo-greet`, скрипт сеанса `/usr/local/lib/nemo/greet-session`,
 его шрифты и курсор, и делает greetd менеджером входа со следующей загрузки (systemd, OpenRC или
 runit; без logind greeter входит в группу seatd). `--no-enable` ставит и не трогает твой менеджер
 входа.
@@ -45,20 +45,20 @@ agreety поднимается сам.
 ## Попробовать, не выходя из сеанса
 
 ```sh
-yami-greet --demo           # без greetd; пароль «yami», Esc — выйти
+nemo-greet --demo           # без greetd; пароль «nemo», Esc — выйти
 ```
 
-Внутри niri он откроется поверх твоего сеанса. `yami-greet shot -o ПАПКА` рисует все состояния в PNG
-без Wayland. Журнал настоящего экрана входа: `/var/lib/yami-greet/log/greet.log`.
+Внутри niri он откроется поверх твоего сеанса. `nemo-greet shot -o ПАПКА` рисует все состояния в PNG
+без Wayland. Журнал настоящего экрана входа: `/var/lib/nemo-greet/log/greet.log`.
 
 ## Вид
 
-Экран входа работает от пользователя greetd, поэтому вид он читает из `/var/lib/yami-greet/look/`
-(пишет туда root; шелл yami заполняет её сам):
+Экран входа работает от пользователя greetd, поэтому вид он читает из `/var/lib/nemo-greet/look/`
+(пишет туда root; шелл nemo заполняет её сам):
 
 | Файл | Что |
 |---|---|
-| `look.json` | те же ключи, что в `~/.config/yami/style.json` (`preset`, `palette` или `accent`, `light`, `corners`, `font`, `lang`, `colors`…), и те, что ниже |
+| `look.json` | те же ключи, что в `~/.config/nemo/style.json` (`preset`, `palette` или `accent`, `light`, `corners`, `font`, `lang`, `colors`…), и те, что ниже |
 | `wall.png` | обои любого размера: они закрывают экран; нет файла — цвет темы |
 
 | Ключ | По умолчанию | Что |
@@ -76,9 +76,9 @@ yami-greet --demo           # без greetd; пароль «yami», Esc — вы
 Например:
 
 ```sh
-echo '{ "preset": "yami", "palette": "ice", "greetUsers": "name", "kbLayout": "us,de" }' |
-  sudo tee /var/lib/yami-greet/look/look.json
-sudo install -m 644 ~/Pictures/wall.png /var/lib/yami-greet/look/wall.png
+echo '{ "preset": "nemo", "palette": "ice", "greetUsers": "name", "kbLayout": "us,de" }' |
+  sudo tee /var/lib/nemo-greet/look/look.json
+sudo install -m 644 ~/Pictures/wall.png /var/lib/nemo-greet/look/wall.png
 ```
 
 Экран входа читает файлы при следующем запуске, с ограничением размера, и никогда не идёт там по
