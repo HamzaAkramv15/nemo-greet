@@ -328,7 +328,7 @@ dependencies = [
 
 [[package]]
 name = "nemo-greet"
-version = "3.1.0"
+version = "3.2.0"
 dependencies = [
  "calloop",
  "calloop-wayland-source",
