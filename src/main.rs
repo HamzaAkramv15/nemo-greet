@@ -190,7 +190,7 @@ fn shot(args: &[String]) -> i32 {
         g.host = "nemo".into();
         g.power = true;
         g.blink = true;
-        g.users = vec![data::User { name: "nemo".into(), real: "Yami".into() }, data::User { name: "guest".into(), real: String::new() }];
+        g.users = vec![data::User { name: "nemo".into(), real: "Nemo".into() }, data::User { name: "guest".into(), real: String::new() }];
         g.user = 0;
         g.phase = Phase::Pass;
         g.sessions = vec![data::Session { id: "niri".into(), name: "Niri".into(), cmd: vec!["niri-session".into()], desktops: "niri".into() }];
